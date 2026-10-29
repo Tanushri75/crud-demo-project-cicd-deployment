@@ -21,13 +21,16 @@ jobs:
       run: mvn clean package -DskipTests
 
     - name: Login to Docker Hub
-      run: docker login -u "{{ secrets.DOCKER_USERNAME }}" --password-stdin
+      uses: docker/login-action@v4
+      with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
     - name: Build Docker Image
-      run: docker build -t ${{ secrets.DOCKER_USERNAME }}/crud-demo:latest .
+      run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/crud-demo:latest .
 
     - name: Push Image to Docker Hub
-      run: docker push ${{ secrets.DOCKER_USERNAME }}/crud-demo:latest
+      run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/crud-demo:latest
 
     - name: SSH and Deploy to EC2
       uses: appleboy/ssh-action@v1
@@ -38,5 +41,5 @@ jobs:
         script: |
           docker stop crud-demo || true
           docker rm crud-demo || true
-          docker pull ${{ secrets.DOCKER_USERNAME }}/crud-demo:latest
-          docker run -d --name crud-demo -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/crud-demo:latest   
+          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/crud-demo:latest
+          docker run -d --name crud-demo -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/crud-demo:latest   
